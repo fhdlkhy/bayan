@@ -93,7 +93,7 @@ st.markdown("""
 
 # مفتاح API يقرأ من إعدادات Streamlit Cloud أو البيئة المحلية
 # في حالة التشغيل المحلي المباشر، سيعتمد على الإدخال اليدوي إذا لم يجد Secrets
-api_key = st.secrets.get("GOOGLE_API_KEY")
+api_key = st.secrets.get("GOOGLE_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 
 if not api_key:
     # هذا المربع سيظهر فقط إذا لم نضع المفتاح في الإعدادات (للتسهيل عليك الآن)
@@ -116,7 +116,7 @@ if api_key:
             
             try:
                 # إرسال إلى Gemini
-                model = genai.GenerativeModel("gemini-1.5-flash")
+                model = genai.GenerativeModel("gemini-pro")
                 file_upload = genai.upload_file(temp_audio_path)
                 
                 prompt = """
