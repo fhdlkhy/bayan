@@ -2,6 +2,12 @@ import streamlit as st
 import google.generativeai as genai
 import os
 import tempfile
+import sentry_sdk
+
+# تهيئة Sentry إن وُجد DSN في البيئة (اختياري للمراقبة)
+sentry_dsn = os.environ.get("SENTRY_DSN") or st.secrets.get("SENTRY_DSN")
+if sentry_dsn:
+    sentry_sdk.init(dsn=sentry_dsn, traces_sample_rate=0.05)
 
 # ==========================================
 # 1. إعدادات الصفحة (تصميم رسمي - أبيض وزمردي)
@@ -93,11 +99,17 @@ st.markdown("""
 
 # مفتاح API يقرأ من إعدادات Streamlit Cloud أو البيئة المحلية
 # في حالة التشغيل المحلي المباشر، سيعتمد على الإدخال اليدوي إذا لم يجد Secrets
+# نعتبر البيئة إنتاجية إذا حُدّد ENV=production
+is_production = os.environ.get("ENV", "").lower() == "production"
+
 api_key = st.secrets.get("GOOGLE_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 
-if not api_key:
-    # هذا المربع سيظهر فقط إذا لم نضع المفتاح في الإعدادات (للتسهيل عليك الآن)
+if not api_key and not is_production:
+    # يسمح بالإدخال اليدوي فقط في بيئات التطوير
     api_key = st.text_input("أدخل مفتاح API الخاص بك للبدء:", type="password")
+
+if not api_key and is_production:
+    st.error("مفتاح Google API غير معرّف في بيئة الإنتاج. عرّف GOOGLE_API_KEY في أسرار النظام.")
 
 if api_key:
     genai.configure(api_key=api_key)
